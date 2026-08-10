@@ -1,0 +1,17 @@
+__pycache__\
+*.pyc
+venv\
+.env
+.env.*
+*.env
+postgres_data/
+.vscode/
+*.log
+.pytest_cache/
+credentials.json
+*.key
+*.pem
+secrets/
+config/secrets/
+*.secret
+
