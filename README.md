@@ -174,17 +174,7 @@ alembic downgrade -1
 - Auditoría de acciones
 - Variables de entorno para datos sensibles
 
-## Testing
 
-Ejecutar tests:
-```bash
-pytest
-```
-
-Ejecutar tests con cobertura:
-```bash
-pytest --cov=app --cov-report=html
-```
 
 ## Módulos Principales
 
