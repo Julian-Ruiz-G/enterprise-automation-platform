@@ -47,7 +47,7 @@ enterprise-automation-platform/
 └── .gitignore              # Archivos ignorados por git
 ```
 
-## 🚀 Configuración e Instalación
+## Configuración e Instalación
 
 ### Prerrequisitos
 
@@ -64,23 +64,23 @@ APP_NAME=Enterprise Automation Platform
 ENVIRONMENT=development
 
 # PostgreSQL
-POSTGRES_DB=enterprise_db
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres123
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
+POSTGRES_DB
+POSTGRES_USER
+POSTGRES_PASSWORD
+POSTGRES_HOST
+POSTGRES_PORT
 
 # Redis
 REDIS_HOST=localhost
 REDIS_PORT=6379
 
 # JWT
-JWT_SECRET_KEY=your-secret-key-here
-JWT_ALGORITHM=HS256
+JWT_SECRET_KEY
+JWT_ALGORITHM
 
 # Tokens
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_DAYS=7
+ACCESS_TOKEN_EXPIRE_MINUTES
+REFRESH_TOKEN_EXPIRE_DAYS
 ```
 
 ### Iniciar con Docker
