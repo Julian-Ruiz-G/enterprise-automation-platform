@@ -1,19 +1,37 @@
 # Enterprise Automation Platform
 
+[![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.138.0-green.svg)](https://fastapi.tiangolo.com)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org)
+[![License](https://img.shields.io/badge/License-Private-red.svg)](LICENSE)
+
 Una plataforma integral de automatización empresarial construida con FastAPI, diseñada para gestionar workflows, tickets, usuarios, roles y auditoría de sistemas.
+
+## Características
+
+- Gestión de usuarios y roles con control de acceso basado en roles (RBAC)
+- Sistema de tickets de soporte con estados y prioridades
+- Motor de workflows para automatización de procesos
+- Auditoría completa de acciones del sistema
+- Integración con servicios de IA para automatización inteligente
+- API RESTful con documentación interactiva
+- Arquitectura modular y escalable
 
 ## Arquitectura
 
 ### Stack Tecnológico
 
-- **Backend**: FastAPI 0.138.0
-- **Base de Datos**: PostgreSQL 16
-- **Cache**: Redis 7
-- **ORM**: SQLAlchemy 2.0.51
-- **Validación**: Pydantic 2.13.4
-- **Migraciones**: Alembic 1.18.4
-- **Autenticación**: JWT (python-jose)
-- **Servidor ASGI**: Uvicorn 0.49.0
+| Componente | Tecnología | Versión |
+|------------|------------|---------|
+| Backend | FastAPI | 0.138.0 |
+| Base de Datos | PostgreSQL | 16 |
+| Cache | Redis | 7 |
+| ORM | SQLAlchemy | 2.0.51 |
+| Validación | Pydantic | 2.13.4 |
+| Migraciones | Alembic | 1.18.4 |
+| Autenticación | JWT (python-jose) | 3.5.0 |
+| Servidor ASGI | Uvicorn | 0.49.0 |
+| Testing | pytest | 8.3.0 |
 
 ### Estructura del Proyecto
 
@@ -125,21 +143,41 @@ alembic upgrade head
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## 📡 API Endpoints
+## API Endpoints
 
-### Endpoints Principales
+### Authentication
+
+- `POST /auth/login` - Inicio de sesión (OAuth2)
+- `GET /auth/me` - Obtener usuario actual (requiere autenticación)
+
+### Users
+
+- `POST /users/` - Crear usuario (requiere autenticación)
+- `GET /users/` - Listar usuarios (requiere autenticación)
+- `GET /users/{user_id}` - Obtener usuario por ID (requiere autenticación)
+- `PUT /users/{user_id}` - Actualizar usuario (requiere autenticación)
+- `DELETE /users/{user_id}` - Eliminar usuario (requiere autenticación)
+
+### Tickets
+
+- `POST /tickets/` - Crear ticket (requiere autenticación)
+- `GET /tickets/` - Listar tickets (requiere autenticación)
+- `GET /tickets/{ticket_id}` - Obtener ticket por ID (requiere autenticación)
+- `PUT /tickets/{ticket_id}` - Actualizar ticket (requiere autenticación)
+- `DELETE /tickets/{ticket_id}` - Eliminar ticket (requiere autenticación)
+
+### Workflows
+
+- `POST /workflows/` - Crear workflow (requiereRol: Admin)
+- `GET /workflows/` - Listar workflows (requiereRol: Admin)
+- `GET /workflows/{workflow_id}` - Obtener workflow por ID (requiereRol: Admin)
+- `PUT /workflows/{workflow_id}` - Actualizar workflow (requiereRol: Admin)
+- `DELETE /workflows/{workflow_id}` - Eliminar workflow (requiereRol: Admin)
+
+### System
 
 - `GET /` - Root endpoint
 - `GET /health` - Health check
-- `POST /auth/login` - Inicio de sesión
-- `POST /auth/register` - Registro de usuarios
-- `GET /users/` - Listar usuarios
-- `GET /workflows/` - Listar workflows
-- `GET /tickets/` - Listar tickets
-- `GET /roles/` - Listar roles
-- `GET /audit/` - Logs de auditoría
-- `GET /clients/` - Listar clientes
-- `GET /ai/` - Endpoints de IA
 
 ### Documentación Interactiva
 
@@ -168,11 +206,13 @@ alembic downgrade -1
 
 ## Seguridad
 
-- Autenticación basada en JWT
+- Autenticación basada en JWT con tokens de acceso y refresh
 - Encriptación de contraseñas con bcrypt
-- Sistema de roles y permisos
-- Auditoría de acciones
+- Sistema de roles y permisos (RBAC)
+- Auditoría completa de acciones del sistema
 - Variables de entorno para datos sensibles
+- Dependencias de autenticación en endpoints protegidos
+- Control de acceso basado en roles para operaciones críticas
 
 
 
@@ -223,10 +263,23 @@ alembic downgrade -1
 ### Código de Estilo
 
 El proyecto sigue las convenciones de PEP 8 y utiliza:
-- Type hints
-- Pydantic para validación
-- SQLAlchemy ORM
-- FastAPI para la API
+- Type hints para mejor documentación del código
+- Pydantic para validación de datos
+- SQLAlchemy ORM para acceso a base de datos
+- FastAPI para la API REST
+
+### Testing
+
+Ejecutar tests:
+```bash
+cd backend
+pytest
+```
+
+Ejecutar tests con cobertura:
+```bash
+pytest --cov=app --cov-report=html
+```
 
 ### Branching Strategy
 
@@ -234,5 +287,17 @@ El proyecto sigue las convenciones de PEP 8 y utiliza:
 - `develop` - Rama de desarrollo
 - `feature/*` - Nuevas funcionalidades
 - `bugfix/*` - Correcciones de bugs
+
+## Screenshots
+
+### Swagger UI
+
+![Swagger UI](docs/screenshots/swagger-ui.png)
+
+### Dashboard
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+*Nota: Los screenshots se agregarán en futuras versiones.*
 
 
