@@ -1,6 +1,15 @@
 from pydantic import BaseModel
 from datetime import datetime
 
+
+class TicketAnalysis(BaseModel):
+    categoria: str
+    prioridad: str
+    resumen: str
+    respuesta: str
+    sugerencias: str
+
+    
 class TicketCreate(BaseModel):
     title: str
     description: str

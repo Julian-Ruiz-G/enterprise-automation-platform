@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.ai.schemas import TicketAnalysis
 from app.ai.analyzer import analyze_ticket
+from app.tickets.schemas import TicketCreate, TicketResponse, TicketAnalysis
 
 router = APIRouter(
     prefix="/ai",
@@ -13,11 +13,6 @@ router = APIRouter(
     "/analyze",
     response_model=TicketAnalysis
 )
-def analyze():
+def analyze(ticket: TicketCreate):
 
-    return analyze_ticket(
-
-        title="No puedo descargar mi factura",
-
-        description="Cuando doy clic aparece error 500."
-    )
+    return analyze_ticket(ticket=ticket)

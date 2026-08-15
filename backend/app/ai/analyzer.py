@@ -52,9 +52,5 @@ Descripción:
 
     data = json.loads(json_text)
 
-    ticket.ai_category = data["categoria"]
-    ticket.ai_priority = data["prioridad"]
-    ticket.ai_summary = data["resumen"]
-    ticket.ai_response = data["respuesta"]
 
     return data

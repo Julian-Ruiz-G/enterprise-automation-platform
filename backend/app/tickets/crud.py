@@ -12,6 +12,13 @@ def create_ticket(db: Session, ticket: Ticket):
 
     ticket.priority = data["prioridad"]
     ticket.category = data["categoria"]
+    ticket.ai_category = data["categoria"]
+    ticket.ai_priority = data["prioridad"]
+    ticket.ai_summary = data["resumen"]
+    ticket.ai_response = data["respuesta"]
+
+
+
 
     if ticket.priority == "Baja":
         ticket.sla_due_at = datetime.now() + timedelta(hours=48)
