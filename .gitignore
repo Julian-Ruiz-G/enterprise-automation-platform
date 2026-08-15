@@ -16,3 +16,6 @@ secrets/
 config/secrets/
 *.secret
 
+# Seed migrations (contain default credentials)
+backend/alembic/versions/*seed*.py
+

@@ -99,6 +99,10 @@ JWT_ALGORITHM
 # Tokens
 ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_EXPIRE_DAYS
+
+# AI/OLLAMA
+OLLAMA_URL=http://localhost:11434/api/generate
+OLLAMA_MODEL=gemma3:4b
 ```
 
 ### Iniciar con Docker

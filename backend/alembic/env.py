@@ -2,6 +2,10 @@
 from app.roles.models import Role
 from app.users.models import User
 from app.audit.models import AuditLog
+from app.clients.models import Client
+from app.tickets.models import Ticket
+from app.workflows.models import Workflow
+from app.ticket_comments.models import TicketComment
 
 import os
 import sys

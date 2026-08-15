@@ -46,9 +46,9 @@ class Ticket(Base):
         nullable=False
     )
     
-    assigned_user_id: Mapped[int] = mapped_column(
+    assigned_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id"),
-        nullable=False
+        nullable=True
     )
 
     created_at: Mapped[DateTime] = mapped_column(

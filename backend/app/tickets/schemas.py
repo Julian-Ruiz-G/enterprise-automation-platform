@@ -16,6 +16,7 @@ class TicketCreate(BaseModel):
     status: str
     channel: str
     client_id: int
+    assigned_user_id: int | None = None
 
 
 class TicketUpdate(BaseModel):
@@ -26,7 +27,7 @@ class TicketUpdate(BaseModel):
     priority: str 
     channel: str 
     client_id: int 
-    assigned_user_id: int 
+    assigned_user_id: int | None = None
     category: str 
     sla_due_at: datetime | None = None
     first_response_at: datetime | None = None
@@ -42,7 +43,7 @@ class TicketResponse(BaseModel):
     priority: str
     channel: str
     client_id: int
-    assigned_user_id: int
+    assigned_user_id: int | None = None
     category: str
     sla_due_at: datetime | None = None
     first_response_at: datetime | None = None

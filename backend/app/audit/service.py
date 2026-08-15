@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from app.audit.models import AuditLog
 from app.audit import crud
@@ -23,7 +24,8 @@ def register_log(
         user_id=user_id,
 
         old_values=old_values,
-        new_values=new_values
+        new_values=new_values,
+        created_at=datetime.now()
     )
 
     return crud.create_log(

@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
 
+    OLLAMA_URL: str = "http://localhost:11434/api/generate"
+    OLLAMA_MODEL: str = "gemma3:4b"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore"

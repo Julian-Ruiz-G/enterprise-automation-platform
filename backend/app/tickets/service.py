@@ -40,6 +40,7 @@ def register_ticket(
         status=ticket.status,
         channel=ticket.channel,
         client_id=ticket.client_id,
+        assigned_user_id=ticket.assigned_user_id,
         created_at=datetime.now(),
         updated_at=datetime.now()
     )
