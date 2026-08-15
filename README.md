@@ -13,7 +13,7 @@ Una plataforma integral de automatización empresarial construida con FastAPI, d
 - Sistema de tickets de soporte con estados y prioridades
 - Motor de workflows para automatización de procesos
 - Auditoría completa de acciones del sistema
-- Integración con servicios de IA para automatización inteligente
+- Integración con servicios de IA local usando Ollama and Gemma 3 4B para automatización inteligente
 - API RESTful con documentación interactiva
 - Arquitectura modular y escalable
 
@@ -32,6 +32,7 @@ Una plataforma integral de automatización empresarial construida con FastAPI, d
 | Autenticación | JWT (python-jose) | 3.5.0 |
 | Servidor ASGI | Uvicorn | 0.49.0 |
 | Testing | pytest | 8.3.0 |
+| IA | Ollama | Gemma 3 4B |
 
 ### Estructura del Proyecto
 
@@ -58,8 +59,6 @@ enterprise-automation-platform/
 │   ├── tests/               # Tests unitarios
 │   ├── requirements.txt     # Dependencias de Python
 │   └── .env                 # Variables de entorno (no versionado)
-├── frontend/                # Frontend (pendiente)
-├── infrastructure/          # Infraestructura como código (pendiente)
 ├── docs/                    # Documentación (pendiente)
 ├── docker-compose.yml       # Orquestación de contenedores
 └── .gitignore              # Archivos ignorados por git
@@ -260,7 +259,7 @@ alembic downgrade -1
 ### AI
 - Integración con servicios de IA
 - Automatización inteligente
-- Análisis predictivo
+- Análisis y clasificación inteligente de tickets
 
 ## Desarrollo
 
