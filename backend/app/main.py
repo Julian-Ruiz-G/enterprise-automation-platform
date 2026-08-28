@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.auth.router import router as auth_router
 from app.core.config import settings
 from app.api.health import router as health_router
@@ -10,10 +12,19 @@ from app.clients.router import router as clients_router
 from app.tickets.router import router as tickets_router
 from app.ai.router import router as ai_router
 
-
 app = FastAPI(
     title=settings.APP_NAME
 
+)
+
+origins = [o.strip() for o in settings.CORS_ORIGINS.split(",")]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(health_router)

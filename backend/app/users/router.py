@@ -23,7 +23,8 @@ from app.users.service import (
 )
 
 from app.security.dependencies import (
-    get_current_user
+    get_current_user, 
+    require_role_name,
 )
 
 router = APIRouter(
@@ -38,7 +39,7 @@ router = APIRouter(
 def create_user(
     user: UserCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_role_name('Administrador')),
 ):
 
     created = register_user(
@@ -127,7 +128,7 @@ def edit_user(
 def remove_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_role_name('Administrador')),
 ):
 
     user = delete_user(

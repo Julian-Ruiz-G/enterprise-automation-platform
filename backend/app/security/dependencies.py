@@ -76,3 +76,17 @@ def require_role(role_id: int):
         return current_user
 
     return role_checker
+
+
+def require_role_name(*allowed: str):
+    def rol_checker(
+        current_user: User = Depends(current_active_user),
+    ):
+        role_name = current_user.role.name if current_user.role else None 
+        if role_name not in allowed: 
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permisos"
+            )
+        return current_user
+    return rol_checker
