@@ -1,3 +1,4 @@
+import logging
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
@@ -6,31 +7,36 @@ from app.ai.analyzer import analyze_ticket
 from app.assignment.service import assign_user
 
 
+logger = logging.getLogger(__name__)
+
+SLA_HOURS = {
+
+    "Baja": 48,
+    "Media": 24,
+    "Alta": 8,
+    "Urgente": 1,
+
+}
+
 def create_ticket(db: Session, ticket: Ticket):
 
-    data = analyze_ticket(ticket)
+    ticket.category = "Soporte"
+    ticket.priority = "Media"
 
-    ticket.priority = data["prioridad"]
-    ticket.category = data["categoria"]
-    ticket.ai_category = data["categoria"]
-    ticket.ai_priority = data["prioridad"]
-    ticket.ai_summary = data["resumen"]
-    ticket.ai_response = data["respuesta"]
+    try:
+        data = analyze_ticket(ticket)
+        ticket.priority = data["prioridad"]
+        ticket.category = data["categoria"]
+        ticket.ai_category = data["categoria"]
+        ticket.ai_priority = data["prioridad"]
+        ticket.ai_summary = data["resumen"]
+        ticket.ai_response = data["respuesta"]
 
+    except Exception:
+        logger.exception("Ia no disponible; Ticket guardado con valores por defecto")
 
-
-
-    if ticket.priority == "Baja":
-        ticket.sla_due_at = datetime.now() + timedelta(hours=48)
-
-    elif ticket.priority == "Media":
-        ticket.sla_due_at = datetime.now() + timedelta(hours=24)
-
-    elif ticket.priority == "Alta":
-        ticket.sla_due_at = datetime.now() + timedelta(hours=8)
-
-    elif ticket.priority == "Urgente":
-        ticket.sla_due_at = datetime.now() + timedelta(hours=1)
+    hours = SLA_HOURS.get(ticket.priority, 24)
+    ticket.sla_due_at = datetime.now() + timedelta(hours=hours)
 
     assigned = assign_user(
         db,

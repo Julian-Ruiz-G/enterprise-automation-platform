@@ -1,12 +1,24 @@
+from sqlalchemy import text
+
 from app.database.database import SessionLocal
 from app.roles.models import Role
+from app.users.models import User  # noqa: F401
 
 db = SessionLocal()
+
+db.execute(
+    text(
+        "SELECT setval('roles_id_seq', COALESCE((SELECT MAX(id) FROM roles), 1), true)"
+    )
+)
 
 roles = [
     "Administrator",
     "Manager",
-    "Agent"
+    "Agent",
+    "Billing",
+    "Support",
+    "Sales",
 ]
 
 for role_name in roles:

@@ -17,14 +17,6 @@ def register_ticket(
     current_user
 ):
 
-    existing = crud.get_ticket_by_title(
-        db,
-        ticket.title
-    )
-
-    if existing:
-        return None
-
     client_exists = get_client(
         db,
         ticket.client_id

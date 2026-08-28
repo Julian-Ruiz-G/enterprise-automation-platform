@@ -32,7 +32,7 @@ router = APIRouter(
 def create_workflow(
     workflow: WorkflowBase,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role_name('Administrador'))
+    current_user=Depends(require_role_name("Administrador"))
 ):
     return register_workflow(
         db,
@@ -47,7 +47,7 @@ def get_workflows(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role_name('Administrador'))
+    current_user=Depends(require_role_name("Administrador"))
 ):
     return list_workflows(
         db,
@@ -62,7 +62,7 @@ def get_workflows(
 def get_workflow_by_id(
     workflow_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role_name('Administrador'))
+    current_user=Depends(require_role_name("Administrador"))
 ):
     return get_workflow(
         db,
@@ -77,7 +77,7 @@ def edit_workflow(
     workflow_id: int,
     workflow: WorkflowUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role_name('Administrador'))
+    current_user=Depends(require_role_name("Administrador"))
 ):
     return update_workflow(
         db,
@@ -91,7 +91,7 @@ def edit_workflow(
 def delete_workflow(
     workflow_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role_name('Administrador'))
+    current_user=Depends(require_role_name("Administrador"))
 ):
     return remove_workflow(
         db,

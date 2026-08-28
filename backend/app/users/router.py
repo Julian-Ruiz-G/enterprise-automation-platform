@@ -39,7 +39,7 @@ router = APIRouter(
 def create_user(
     user: UserCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role_name('Administrador')),
+    current_user=Depends(require_role_name("Administrador")),
 ):
 
     created = register_user(
@@ -128,7 +128,7 @@ def edit_user(
 def remove_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role_name('Administrador')),
+    current_user=Depends(require_role_name("Administrador"))
 ):
 
     user = delete_user(
