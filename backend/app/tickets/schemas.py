@@ -13,11 +13,10 @@ class TicketAnalysis(BaseModel):
 class TicketCreate(BaseModel):
     title: str
     description: str
-    status: str
     channel: str
     client_id: int
+    status: str = "OPEN"
     assigned_user_id: int | None = None
-
 
 class TicketUpdate(BaseModel):
     title: str | None = None

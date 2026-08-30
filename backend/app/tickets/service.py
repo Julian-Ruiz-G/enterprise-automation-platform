@@ -26,30 +26,24 @@ def register_ticket(
         return "Cliente no encontrado"
 
 
+    assigned_id = ticket.assigned_user_id
+    if assigned_id == 0:
+        assigned_id = None
+
     db_ticket = Ticket(
         title=ticket.title,
         description=ticket.description,
         status=ticket.status,
         channel=ticket.channel,
         client_id=ticket.client_id,
-        assigned_user_id=ticket.assigned_user_id,
+        assigned_user_id=assigned_id,
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
     )
     created = crud.create_ticket(
         db,
         db_ticket
     )
-    
-
-    print("====== IA ======")
-    print(created.ai_category)
-    print(created.ai_priority)
-    print(created.ai_summary)
-    print(created.ai_response)
-    print(created.ai_category)
-    print(db_ticket.ai_response)
-    print("====== FIN IA ======")
     
     # Run workflow  
     run_workflow(
