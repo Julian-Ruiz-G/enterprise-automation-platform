@@ -14,10 +14,6 @@ from app.clients.schemas import (
     ClientResponse
 )
 
-from app.security.dependencies import (
-    get_current_user
-)
-
 from app.clients.service import (
     register_client,
     list_clients,
@@ -27,7 +23,8 @@ from app.clients.service import (
 )
 
 from app.security.dependencies import (
-    require_role
+    get_current_user,
+    require_role_name,
 )
 
 router = APIRouter(
@@ -44,7 +41,7 @@ def create_client(
 
     db: Session = Depends(get_db),
 
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_role_name("Administrador"))
     
 ):
 
@@ -70,7 +67,7 @@ def get_clients(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role(1))
+    current_user=Depends(get_current_user)
 ):
 
     return list_clients(
@@ -86,7 +83,7 @@ def get_clients(
 def get_one_client(
     client_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role(1))
+    current_user=Depends(get_current_user)
 ):
 
     client = get_client(
@@ -110,7 +107,7 @@ def edit_client(
     client_id: int,
     updates: ClientUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role(1))
+    current_user=Depends(require_role_name("Administrador"))
 ):
 
     client = update_client(
@@ -134,7 +131,7 @@ def edit_client(
 def remove_client(
     client_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_role_name("Administrador"))
 
 ):
 

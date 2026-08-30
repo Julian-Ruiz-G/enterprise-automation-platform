@@ -27,3 +27,7 @@ def test_ai_analyze_sin_token():
 def test_workflows_sin_token():
     response = client.get("/workflows")
     assert response.status_code == 401
+
+def test_roles_sin_token():
+    response = client.get("/roles")
+    assert response.status_code == 401
