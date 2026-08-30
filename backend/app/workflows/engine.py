@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.notifications.service import execute_notification
 from app.workflows import crud
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -22,19 +23,41 @@ def run_workflow(
         trigger
     )
 
-    logger.info("Workflows encontrados: %s", len(workflows))
+    print("Workflows encontrados:", len(workflows))
+    for workflow in workflows:
+        print("workflow id=", workflow.id, "config=", repr(workflow.configuration))
 
     for workflow in workflows:
+        if not _matches_configuration(workflow, payload):
+            print("skip", workflow.id)
+            continue
         try:
             execute_notification(workflow.action, payload)
-            logger.info("Workflow ok id=%s action=%s", 
-            workflow.id, 
-            workflow.action)
-
+            print("ok", workflow.id, workflow.action)
         except Exception:
             logger.exception(
-                "Worflow failed id=%s action=%s", 
-                workflow.id, 
+                "Worflow failed id=%s action=%s",
+                workflow.id,
                 workflow.action
             )
 
+
+def _matches_configuration(workflow, payload: dict) -> bool:
+    raw = (workflow.configuration or "").strip()
+    if not raw:
+        return True
+    try:
+        rules = json.loads(raw)
+    except json.JSONDecodeError:
+        logger.warning(
+            "workflow id=%s configuration no es JSON: %s",
+            workflow.id,
+            raw,
+        )
+        return False
+    if not isinstance(rules, dict):
+        return False
+    for key, expected in rules.items():
+        if payload.get(key) != expected:
+            return False
+    return True

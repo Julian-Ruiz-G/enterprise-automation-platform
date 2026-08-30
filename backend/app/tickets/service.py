@@ -52,8 +52,11 @@ def register_ticket(
         {
             "ticket_id": created.id,
             "title": created.title,
-            "client_id": created.client_id
-        }
+            "client_id": created.client_id,
+            "priority": created.priority,
+            "category": created.category,
+            "status": created.status,
+        },
     )
     
     register_log(
