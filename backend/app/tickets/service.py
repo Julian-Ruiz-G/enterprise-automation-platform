@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 from app.tickets import crud
 from app.audit.service import register_log
 from app.tickets.models import Ticket
@@ -191,3 +191,22 @@ def delete_ticket(
     )
 
     return ticket
+
+def check_sla_breaches(db: Session) -> list[int]:
+    tickets = crud.get_sla_breached_tickets(db)
+    ids = []
+    for ticket in tickets:
+        run_workflow(
+            db,
+            "SLA_BREACH",
+            {
+                "ticket_id": ticket.id,
+                "title": ticket.title,
+                "client_id": ticket.client_id,
+                "priority": ticket.priority,
+                "category": ticket.category,
+                "status": ticket.status,
+            },
+        )
+        ids.append(ticket.id)
+    return ids

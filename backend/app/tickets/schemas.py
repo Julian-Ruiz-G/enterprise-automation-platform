@@ -52,3 +52,7 @@ class TicketResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class SlaCheckResponse(BaseModel):
+    breached_count: int
+    ticket_ids: list[int]

@@ -31,3 +31,7 @@ def test_workflows_sin_token():
 def test_roles_sin_token():
     response = client.get("/roles")
     assert response.status_code == 401
+
+def test_sla_check_sin_token():
+    response = client.post("/tickets/sla-check")
+    assert response.status_code == 401

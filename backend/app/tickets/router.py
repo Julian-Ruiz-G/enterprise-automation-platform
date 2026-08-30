@@ -11,7 +11,8 @@ from app.database.database import get_db
 from app.tickets.schemas import (
     TicketCreate,
     TicketUpdate,
-    TicketResponse
+    TicketResponse,
+    SlaCheckResponse,
 )
 
 from app.tickets.service import (
@@ -19,11 +20,12 @@ from app.tickets.service import (
     list_tickets,
     get_ticket,
     update_ticket,
-    delete_ticket
+    delete_ticket,
+    check_sla_breaches,
 )
-
 from app.security.dependencies import (
-    get_current_user
+    get_current_user,
+    require_role_name,
 )
 
 router = APIRouter(
@@ -79,6 +81,20 @@ def get_tickets(
         limit
     )
 
+
+@router.post(
+    "/sla-check",
+    response_model=SlaCheckResponse,
+)
+def run_sla_check(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_role_name("Administrador")),
+):
+    ids = check_sla_breaches(db)
+    return SlaCheckResponse(
+        breached_count=len(ids),
+        ticket_ids=ids,
+    )
 
 @router.get(
     "/{ticket_id}",

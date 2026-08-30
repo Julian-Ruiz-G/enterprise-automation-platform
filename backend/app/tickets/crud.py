@@ -1,11 +1,11 @@
 import logging
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from app.common.enums import TicketCategory, TicketPriority, TicketStatus
+from datetime import datetime, timedelta, timezone
 
 from app.tickets.models import Ticket
 from app.ai.analyzer import analyze_ticket
 from app.assignment.service import assign_user
-from app.common.enums import TicketCategory, TicketPriority
 
 
 logger = logging.getLogger(__name__)
@@ -110,3 +110,20 @@ def delete_ticket(
 
     db.delete(ticket)
     db.commit()
+
+def get_sla_breached_tickets(db: Session) -> list[Ticket]:
+    now = datetime.now(timezone.utc)
+    closed = (
+        TicketStatus.RESOLVED.value,
+        TicketStatus.CLOSED.value,
+    )
+    return (
+        db.query(Ticket)
+        .filter(
+            Ticket.sla_due_at.isnot(None),
+            Ticket.sla_due_at < now,
+            Ticket.first_response_at.is_(None),
+            Ticket.status.notin_(closed),
+        )
+        .all()
+    )
