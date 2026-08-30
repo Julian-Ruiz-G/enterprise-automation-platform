@@ -1,189 +1,74 @@
-from sqlalchemy.orm import Session
 from datetime import datetime
-from app.ticket_comments import crud
-from app.audit.service import register_log, register_update_log
-from app.ticket_comments.models import TicketComment
-from app.workflows.engine import run_workflow
-from app.users.service import get_user
-from app.clients.service import get_client
 
-from app.tickets.schemas import (
-    TicketUpdate
-)
+from sqlalchemy.orm import Session
+
+from app.audit.service import register_log
+from app.ticket_comments import crud
+from app.ticket_comments.models import TicketComment
+from app.ticket_comments.schemas import TicketCommentCreate
+from app.tickets import crud as tickets_crud
 
 
 def register_ticket_comment(
-    db,
-    ticket_comment,
-    current_user
+    db: Session,
+    ticket_id: int,
+    payload: TicketCommentCreate,
+    current_user,
 ):
+    ticket = tickets_crud.get_ticket(db, ticket_id)
+    if ticket is None:
+        return "Ticket no encontrado"
 
-    existing = crud.get_ticket_comment(
-        db,
-        ticket_comment.ticket_comment_id
-    )
-
-    if existing:
-        return None
-
-    user_exists = get_user(
-        db,
-        ticket_comment.user_id
-    )
-
-    if not user_exists:
-        return "Usuario no encontrado"
-
-    client_exists = get_client(
-        db,
-        ticket_comment.client_id
-    )
-
-    if not client_exists:
-        return "Cliente no encontrado"
-
-
-    db_ticket_comment = TicketComment(
-        ticket_id=ticket_comment.ticket_id,
-        comment=ticket_comment.comment,
-        user_id=ticket_comment.user_id,
-        client_id=ticket_comment.client_id,
+    comment = TicketComment(
+        ticket_id=ticket_id,
+        user_id=current_user.id,
+        client_id=ticket.client_id,
+        message=payload.message,
+        is_internal=payload.is_internal,
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
     )
-    created = crud.create_ticket_comment(
-        db,
-        db_ticket_comment
-    )
+    created = crud.create_ticket_comment(db, comment)
 
-    # Register log
+    if not payload.is_internal and ticket.first_response_at is None:
+        ticket.first_response_at = datetime.now()
+        tickets_crud.update_ticket(db, ticket)
+
     register_log(
         db=db,
         table_name="ticket_comments",
         record_id=created.id,
         action="CREATE",
         user_id=current_user.id,
-        client_id=current_user.client_id,
         new_values={
             "ticket_id": created.ticket_id,
-            "comment": created.comment,
+            "message": created.message,
             "user_id": created.user_id,
-            "client_id": created.client_id
-        }
+            "is_internal": created.is_internal,
+        },
     )
 
     return created
 
 
-def list_tickets_comments(
+def list_ticket_comments(
     db: Session,
+    ticket_id: int,
+    current_user,
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
 ):
+    ticket = tickets_crud.get_ticket(db, ticket_id)
+    if ticket is None:
+        return "Ticket no encontrado"
 
-    return crud.get_ticket_comments(
-        db, 
-        skip,
-        limit
-    )
+    role_name = current_user.role.name if current_user.role else None
+    include_internal = role_name != "Client"
 
-
-def get_ticket_comment(
-    db: Session,    
-    ticket_comment_id: int
-):
-
-    return crud.get_ticket_comment(
+    return crud.get_comments_by_ticket(
         db,
-        ticket_comment_id
+        ticket_id,
+        skip=skip,
+        limit=limit,
+        include_internal=include_internal,
     )
-
-
-def update_ticket_comment(
-    db: Session,
-    ticket_comment_id: int,
-    updates: TicketUpdate,
-    current_user
-):
-
-    ticket_comment = crud.get_ticket_comment(
-        db,
-        ticket_comment_id
-    )
-
-    if not ticket_comment:
-        return None
-    old_values ={
-        "ticket_id": ticket_comment.ticket_id,
-        "comment": ticket_comment.comment,
-        "user_id": ticket_comment.user_id,
-        "client_id": ticket_comment.client_id
-    }
-    data = updates.model_dump(
-        exclude_unset=True
-    )
-
-    register_update_log(
-        db=db,
-        table_name="ticket_comments",
-        old_record=ticket_comment,
-        new_record=ticket_comment,
-        user_id=current_user.id,
-        client_id=current_user.client_id
-    )
-
-    for key, value in data.items():
-        setattr(ticket_comment, key, value)
-
-    register_log(
-        db=db,
-        table_name="ticket_comments",
-        record_id=ticket_comment.id,
-        action="UPDATE",
-        user_id=current_user.id,
-        client_id=current_user.client_id,
-        old_values=old_values,
-        new_values=data
-    )
-    
-    return crud.update_ticket_comment(
-        db,
-        ticket_comment
-    )
-
-
-def delete_ticket_comment(
-    db: Session,
-    ticket_comment_id: int,
-    current_user
-):
-
-    ticket_comment = crud.get_ticket_comment(
-        db,
-        ticket_comment_id
-    )
-
-    if not ticket_comment:
-        return None
-    old_values = {
-        "ticket_id": ticket_comment.ticket_id,
-        "comment": ticket_comment.comment,
-        "user_id": ticket_comment.user_id,
-        "client_id": ticket_comment.client_id
-    }
-    crud.delete_ticket_comment(
-        db,
-        ticket_comment
-    )
-
-    register_log(
-        db=db,
-        table_name="ticket_comments",
-        record_id=ticket_comment.id,
-        action="DELETE",
-        user_id=current_user.id,
-        client_id=current_user.client_id,
-        old_values=old_values
-    )
-
-    return ticket_comment

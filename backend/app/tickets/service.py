@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
 from app.tickets import crud
-from app.audit.service import register_log, register_update_log
+from app.audit.service import register_log
 from app.tickets.models import Ticket
 from app.workflows.engine import run_workflow
 from app.clients.service import get_client
@@ -109,38 +109,41 @@ def update_ticket(
     db: Session,
     ticket_id: int,
     updates: TicketUpdate,
-    current_user
+    current_user,
 ):
-
-    ticket = crud.get_ticket(
-        db,
-        ticket_id
-    )
+    ticket = crud.get_ticket(db, ticket_id)
 
     if not ticket:
         return None
-    old_values ={
+
+        
+
+    old_values = {
         "title": ticket.title,
         "description": ticket.description,
         "status": ticket.status,
         "priority": ticket.priority,
         "channel": ticket.channel,
-        "client_id": ticket.client_id
+        "client_id": ticket.client_id,
+        "assigned_user_id": ticket.assigned_user_id,
+        "category": ticket.category,
     }
-    data = updates.model_dump(
-        exclude_unset=True
-    )
 
-    register_update_log(
-        db=db,
-        table_name="tickets",
-        old_record=ticket,
-        new_record=ticket,
-        user_id=current_user.id
-    )
+    data = updates.model_dump(exclude_unset=True)
+
+    # Swagger envía 0 en enteros opcionales; 0 no es un id válido
+    if data.get("assigned_user_id") == 0:
+        data["assigned_user_id"] = None
+    if data.get("client_id") == 0:
+        data.pop("client_id", None)
 
     for key, value in data.items():
         setattr(ticket, key, value)
+
+    ticket.updated_at = datetime.now()
+
+    if ticket.status == "CLOSED" and getattr(ticket, "closed_at", None) is None:
+        ticket.closed_at = datetime.now()
 
     register_log(
         db=db,
@@ -149,13 +152,10 @@ def update_ticket(
         action="UPDATE",
         user_id=current_user.id,
         old_values=old_values,
-        new_values=data
+        new_values=data,
     )
-    
-    return crud.update_ticket(
-        db,
-        ticket
-    )
+
+    return crud.update_ticket(db, ticket)
 
 
 def delete_ticket(

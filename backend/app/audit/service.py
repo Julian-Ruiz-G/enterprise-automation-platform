@@ -1,10 +1,21 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, date
 
 from app.audit.models import AuditLog
 from app.audit import crud
 from app.audit.utils import get_changes
 
+
+def json_safe(value):
+    if isinstance(value, dict):
+        return {k: json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(v) for v in value]
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    return value
 
 def register_log(
     db: Session,
@@ -12,8 +23,8 @@ def register_log(
     record_id: int,
     action: str,
     user_id: int,
-    old_values: dict | None = None,
-    new_values: dict | None = None
+    old_values=None,
+    new_values=None,
 ):
 
     log = AuditLog(
@@ -23,8 +34,8 @@ def register_log(
         action=action,
         user_id=user_id,
 
-        old_values=old_values,
-        new_values=new_values,
+        old_values=json_safe(old_values) if old_values is not None else None,
+        new_values=json_safe(new_values) if new_values is not None else None,
         created_at=datetime.now()
     )
 

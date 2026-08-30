@@ -11,6 +11,7 @@ from app.audit.router import router as audit_router
 from app.clients.router import router as clients_router
 from app.tickets.router import router as tickets_router
 from app.ai.router import router as ai_router
+from app.ticket_comments.router import router as ticket_comments_router
 
 app = FastAPI(
     title=settings.APP_NAME
@@ -36,6 +37,7 @@ app.include_router(audit_router)
 app.include_router(clients_router)
 app.include_router(tickets_router)
 app.include_router(ai_router)
+app.include_router(ticket_comments_router)
 
 @app.get("/")
 def root():

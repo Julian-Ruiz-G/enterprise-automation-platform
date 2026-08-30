@@ -1,8 +1,11 @@
+import logging
+
 from sqlalchemy.orm import Session
-from app.workflows import crud
-from app.workflows.actions import execute_action
-from app.workflow_engine.actions.email_action import send_email
+
 from app.notifications.service import execute_notification
+from app.workflows import crud
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -19,12 +22,19 @@ def run_workflow(
         trigger
     )
 
-    print("Workflows encontrados:", len(workflows))
+    logger.info("Workflows encontrados: %s", len(workflows))
 
     for workflow in workflows:
+        try:
+            execute_notification(workflow.action, payload)
+            logger.info("Workflow ok id=%s action=%s", 
+            workflow.id, 
+            workflow.action)
 
-        execute_notification(
-            workflow.action,
-            payload
-        )
+        except Exception:
+            logger.exception(
+                "Worflow failed id=%s action=%s", 
+                workflow.id, 
+                workflow.action
+            )
 

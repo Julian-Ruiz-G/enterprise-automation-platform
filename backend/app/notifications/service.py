@@ -15,4 +15,4 @@ def execute_notification(action: str, payload: dict):
         send_whatsapp(payload)
 
     else:
-        print(f"Acción desconocida: {action}")
+        logger.warning("Acción de workflow desconocida: %s", action)

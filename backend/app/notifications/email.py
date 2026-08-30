@@ -1,8 +1,11 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 def send_email(payload: dict):
-
-    print("========== EMAIL ==========")
-    print(f"Ticket: {payload['ticket_id']}")
-    print(f"Cliente: {payload['client_id']}")
-    print(f"Título: {payload['title']}")
-    print("===========================")
-
+    logger.info(
+        "SEND_EMAIL ticket_id=%s client_id=%s title=%s",
+        payload.get("ticket_id"),
+        payload.get("client_id"),
+        payload.get("title"),
+    )

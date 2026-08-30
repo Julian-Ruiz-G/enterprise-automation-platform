@@ -20,21 +20,20 @@ class TicketCreate(BaseModel):
 
 
 class TicketUpdate(BaseModel):
-
-    title: str 
-    description: str 
-    status: str 
-    priority: str 
-    channel: str 
-    client_id: int 
+    title: str | None = None
+    description: str | None = None
+    status: str | None = None
+    priority: str | None = None
+    channel: str | None = None
+    client_id: int | None = None
     assigned_user_id: int | None = None
-    category: str 
+    category: str | None = None
     sla_due_at: datetime | None = None
     first_response_at: datetime | None = None
     ai_summary: str | None = None
     ai_response: str | None = None
 
-
+    
 class TicketResponse(BaseModel):
     id: int
     title: str

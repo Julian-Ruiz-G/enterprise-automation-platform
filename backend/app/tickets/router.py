@@ -127,7 +127,16 @@ def edit_ticket(
             status_code=404,
             detail="Ticket no encontrado"
         )
-
+    if ticket == "Usuario no encontrado":
+        raise HTTPException(
+            status_code=400,
+            detail="Usuario no encontrado"
+        )
+    if ticket == "Cliente no encontrado":
+        raise HTTPException(
+            status_code=400,
+            detail="Cliente no encontrado"
+        )
     return ticket
 
 @router.delete(
