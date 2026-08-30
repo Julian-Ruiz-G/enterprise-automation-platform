@@ -5,23 +5,27 @@ from datetime import datetime, timedelta
 from app.tickets.models import Ticket
 from app.ai.analyzer import analyze_ticket
 from app.assignment.service import assign_user
+from app.common.enums import TicketCategory, TicketPriority
 
 
 logger = logging.getLogger(__name__)
 
 SLA_HOURS = {
-
+    TicketPriority.LOW.value: 24,
+    TicketPriority.MEDIUM.value: 8,
+    TicketPriority.HIGH.value: 2,
+    TicketPriority.CRITICAL.value: 1,  # horas; luego afinamos a minutos
+    # tickets viejos:
     "Baja": 48,
     "Media": 24,
     "Alta": 8,
     "Urgente": 1,
-
 }
 
 def create_ticket(db: Session, ticket: Ticket):
 
-    ticket.category = "Soporte"
-    ticket.priority = "Media"
+    ticket.category = TicketCategory.SUPPORT.value
+    ticket.priority = TicketPriority.MEDIUM.value
 
     try:
         data = analyze_ticket(ticket)

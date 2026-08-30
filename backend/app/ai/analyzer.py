@@ -52,6 +52,8 @@ Descripción:
 
     data = json.loads(json_text)
 
+    from app.ai.normalize import normalize_category, normalize_priority
 
-
+    data["categoria"] = normalize_category(data.get("categoria")).value
+    data["prioridad"] = normalize_priority(data.get("prioridad")).value
     return data

@@ -4,6 +4,9 @@ from app.users.models import User
 from app.roles.models import Role
 
 CATEGORY_TO_ROLE = {
+    "BILLING": "Facturación",
+    "SUPPORT": "Soporte",
+    "SALES": "Ventas",
     "Facturación": "Facturación",
     "Soporte": "Soporte",
     "Ventas": "Ventas",

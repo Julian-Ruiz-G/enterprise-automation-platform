@@ -23,3 +23,8 @@ class TicketChannel(str, Enum):
     TELEGRAM = "TELEGRAM"
     PHONE = "PHONE"
     API = "API"
+
+class TicketCategory(str, Enum):
+    BILLING = "BILLING"
+    SUPPORT = "SUPPORT"
+    SALES = "SALES"
