@@ -195,6 +195,7 @@ def delete_ticket(
 def check_sla_breaches(db: Session) -> list[int]:
     tickets = crud.get_sla_breached_tickets(db)
     ids = []
+    now = datetime.now(timezone.utc)
     for ticket in tickets:
         run_workflow(
             db,
@@ -208,5 +209,8 @@ def check_sla_breaches(db: Session) -> list[int]:
                 "status": ticket.status,
             },
         )
+        ticket.sla_alerted_at = now
         ids.append(ticket.id)
+    if ids:
+        db.commit()
     return ids

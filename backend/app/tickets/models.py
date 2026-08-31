@@ -84,3 +84,5 @@ class Ticket(Base):
     first_response_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
     
     closed_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
+
+    sla_alerted_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))

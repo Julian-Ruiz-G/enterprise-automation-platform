@@ -123,6 +123,7 @@ def get_sla_breached_tickets(db: Session) -> list[Ticket]:
             Ticket.sla_due_at.isnot(None),
             Ticket.sla_due_at < now,
             Ticket.first_response_at.is_(None),
+            Ticket.sla_alerted_at.is_(None),
             Ticket.status.notin_(closed),
         )
         .all()

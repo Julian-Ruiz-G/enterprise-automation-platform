@@ -45,6 +45,7 @@ class TicketResponse(BaseModel):
     category: str
     sla_due_at: datetime | None = None
     first_response_at: datetime | None = None
+    sla_alerted_at: datetime | None = None
     ai_summary: str | None = None
     ai_response: str | None = None
 
