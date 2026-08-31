@@ -214,3 +214,6 @@ def check_sla_breaches(db: Session) -> list[int]:
     if ids:
         db.commit()
     return ids
+
+def ticket_stats(db: Session) -> dict:
+    return crud.get_ticket_stats(db)

@@ -57,3 +57,13 @@ class TicketResponse(BaseModel):
 class SlaCheckResponse(BaseModel):
     breached_count: int
     ticket_ids: list[int]
+
+
+class TicketStatsResponse(BaseModel):
+    total: int
+    by_status: dict[str, int]
+    by_priority: dict[str, int]
+    by_category: dict[str, int]
+    awaiting_first_response: int
+    sla_breached_unalerted: int
+    sla_breached_already_alerted: int

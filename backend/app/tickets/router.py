@@ -13,6 +13,7 @@ from app.tickets.schemas import (
     TicketUpdate,
     TicketResponse,
     SlaCheckResponse,
+    TicketStatsResponse,
 )
 
 from app.tickets.service import (
@@ -22,6 +23,7 @@ from app.tickets.service import (
     update_ticket,
     delete_ticket,
     check_sla_breaches,
+    ticket_stats,
 )
 from app.security.dependencies import (
     get_current_user,
@@ -95,6 +97,17 @@ def run_sla_check(
         breached_count=len(ids),
         ticket_ids=ids,
     )
+
+@router.get(
+    "/stats",
+    response_model=TicketStatsResponse,
+)
+def get_ticket_stats(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+
+    return ticket_stats(db)
 
 @router.get(
     "/{ticket_id}",

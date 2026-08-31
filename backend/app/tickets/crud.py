@@ -7,6 +7,8 @@ from app.tickets.models import Ticket
 from app.ai.analyzer import analyze_ticket
 from app.assignment.service import assign_user
 
+from sqlalchemy import func
+
 
 logger = logging.getLogger(__name__)
 
@@ -128,3 +130,63 @@ def get_sla_breached_tickets(db: Session) -> list[Ticket]:
         )
         .all()
     )
+
+def _counts_by(db: Session, column) -> dict[str, int]:
+    rows = (
+        db.query(column, func.count(Ticket.id))
+        .group_by(column)
+        .all()
+    )
+    return {str(key): n for key, n in rows if key is not None}
+
+
+def get_ticket_stats(db: Session) -> dict:
+    now = datetime.now(timezone.utc)
+    closed = (
+        TicketStatus.RESOLVED.value,
+        TicketStatus.CLOSED.value,
+    )
+    total = db.query(func.count(Ticket.id)).scalar() or 0
+
+    awaiting = (
+        db.query(func.count(Ticket.id))
+        .filter(
+            Ticket.first_response_at.is_(None),
+            Ticket.status.notin_(closed),
+        )
+        .scalar()
+        or 0
+    )
+    unalerted = (
+        db.query(func.count(Ticket.id))
+        .filter(
+            Ticket.sla_due_at.isnot(None),
+            Ticket.sla_due_at < now,
+            Ticket.first_response_at.is_(None),
+            Ticket.sla_alerted_at.is_(None),
+            Ticket.status.notin_(closed),
+        )
+        .scalar()
+        or 0
+    )
+    alerted = (
+        db.query(func.count(Ticket.id))
+        .filter(
+            Ticket.sla_due_at.isnot(None),
+            Ticket.sla_due_at < now,
+            Ticket.first_response_at.is_(None),
+            Ticket.sla_alerted_at.isnot(None),
+            Ticket.status.notin_(closed),
+        )
+        .scalar()
+        or 0
+    )
+    return {
+        "total": total,
+        "by_status": _counts_by(db, Ticket.status),
+        "by_priority": _counts_by(db, Ticket.priority),
+        "by_category": _counts_by(db, Ticket.category),
+        "awaiting_first_response": awaiting,
+        "sla_breached_unalerted": unalerted,
+        "sla_breached_already_alerted": alerted,
+    }
