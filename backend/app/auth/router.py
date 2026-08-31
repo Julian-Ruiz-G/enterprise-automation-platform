@@ -1,20 +1,21 @@
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from app.auth.schemas import Token
-from app.auth.service import authenticate_user
+from app.auth.schemas import Token, RefreshRequest
+from app.auth.service import authenticate_user, refresh_access_token 
 from app.database.database import get_db
 from sqlalchemy.orm import Session
 from app.security.dependencies import get_current_user
 from fastapi import HTTPException
+from app.users.schemas import UserResponse
 
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"]
 )
 
-@router.get("/me")
+@router.get("/me", response_model=UserResponse)
 def get_me(
-    current_user = Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
     return current_user
 
@@ -27,16 +28,24 @@ def login(
     token = authenticate_user(
         db,
         form_data.username,
-        form_data.password
+        form_data.password,
     )
-
     if token is None:
         raise HTTPException(
             status_code=401,
-            detail="Credenciales inválidas"
+            detail="Credenciales inválidas",
         )
+    return token
 
-    return {
-        "access_token": token,
-        "token_type": "bearer"
-    }
+@router.post("/refresh", response_model=Token)
+def refresh(
+    body: RefreshRequest,
+    db: Session = Depends(get_db),
+):
+    token = refresh_access_token(db, body.refresh_token)
+    if token is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Token inválido",
+        )
+    return token

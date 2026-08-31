@@ -39,3 +39,7 @@ def test_sla_check_sin_token():
 def test_ticket_stats_sin_token():
     response = client.get("/tickets/stats")
     assert response.status_code == 401
+
+def test_auth_me_sin_token():
+    response = client.get("/auth/me")
+    assert response.status_code == 401

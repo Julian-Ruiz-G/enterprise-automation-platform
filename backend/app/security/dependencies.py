@@ -23,6 +23,12 @@ def get_current_user(
             detail="Token inválido"
         )
 
+    if payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token de accesoinválido",
+        )
+
     email = payload.get("sub")
 
     if email is None:
