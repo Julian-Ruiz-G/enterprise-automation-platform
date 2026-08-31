@@ -1,3 +1,6 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -12,10 +15,24 @@ from app.clients.router import router as clients_router
 from app.tickets.router import router as tickets_router
 from app.ai.router import router as ai_router
 from app.ticket_comments.router import router as ticket_comments_router
+from app.tickets.scheduler import run_sla_loop
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = None
+    if settings.SLA_CHECK_INTERVAL_SECONDS > 0:
+        task = asyncio.create_task(run_sla_loop())
+    yield
+    if task is not None:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
 app = FastAPI(
-    title=settings.APP_NAME
-
+    title=settings.APP_NAME,
+    lifespan=lifespan,
 )
 
 origins = [o.strip() for o in settings.CORS_ORIGINS.split(",")]

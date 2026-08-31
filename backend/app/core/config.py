@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     OLLAMA_MODEL: str = "gemma3:4b"
 
     CORS_ORIGINS: str = "https://localhost:3000"
+    SLA_CHECK_INTERVAL_SECONDS: int = 0
 
     model_config = SettingsConfigDict(
         env_file=".env",
