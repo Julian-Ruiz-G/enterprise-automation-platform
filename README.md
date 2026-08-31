@@ -1,306 +1,223 @@
 # Enterprise Automation Platform
 
-[![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://www.python.org/downloads/)
+API de helpdesk y automatización **sin frontend**. Hoy se usa desde [Swagger UI](http://127.0.0.1:8000/docs) o cualquier cliente HTTP.
+
+[![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.138.0-green.svg)](https://fastapi.tiangolo.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org)
-[![License](https://img.shields.io/badge/License-Private-red.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](https://docs.docker.com/compose/)
 
-Una plataforma integral de automatización empresarial construida con FastAPI, diseñada para gestionar workflows, tickets, usuarios, roles y auditoría de sistemas.
+**Qué hay ahora:** tickets con categoría/prioridad controladas (`SUPPORT`, `MEDIUM`, `HIGH`, …), clasificación opcional con Ollama, asignación por rol (`Facturación` / `Soporte` / `Ventas`), workflows con filtro JSON, SLA de primera respuesta (job manual + bucle), métricas `GET /tickets/stats`, JWT access + refresh, y la API en Docker junto a Postgres.
 
-## Características
+**Qué no hay:** interfaz de usuario propia, dashboard web, Redis en uso, n8n, WhatsApp Cloud API (el canal es un `print`), correo SMTP real, ni agente IA más allá de clasificar al crear el ticket.
 
-- Gestión de usuarios y roles con control de acceso basado en roles (RBAC)
-- Sistema de tickets de soporte con estados y prioridades
-- Motor de workflows para automatización de procesos
-- Auditoría completa de acciones del sistema
-- Integración con servicios de IA local usando Ollama and Gemma 3 4B para automatización inteligente
-- API RESTful con documentación interactiva
-- Arquitectura modular y escalable
+---
 
-## Arquitectura
+## Cómo se ve (ahora mismo)
 
-### Stack Tecnológico
+No hay pantallas de producto. La “aplicación” es la documentación interactiva de FastAPI.
 
-| Componente | Tecnología | Versión |
-|------------|------------|---------|
-| Backend | FastAPI | 0.138.0 |
-| Base de Datos | PostgreSQL | 16 |
-| Cache | Redis | 7 |
-| ORM | SQLAlchemy | 2.0.51 |
-| Validación | Pydantic | 2.13.4 |
-| Migraciones | Alembic | 1.18.4 |
-| Autenticación | JWT (python-jose) | 3.5.0 |
-| Servidor ASGI | Uvicorn | 0.49.0 |
-| Testing | pytest | 8.3.0 |
-| IA | Ollama | Gemma 3 4B |
+### Recorrido (capturas + Swagger en vivo)
 
-### Estructura del Proyecto
+No hay frontend que grabar como “app de escritorio”. El recorrido **en vídeo** es usar Swagger: http://127.0.0.1:8000/docs → **Try it out** (login → Authorize → tickets). En Windows puedes grabar esa pestaña con **Win + G**.
 
+Las tres capturas siguientes son ese mismo recorrido, en orden (también como GIF):
+
+![Catálogo Swagger → login → stats](docs/screenshots/walkthrough.gif)
+
+| Qué | URL |
+|-----|-----|
+| Swagger (probar la API) | http://127.0.0.1:8000/docs |
+| ReDoc (solo lectura) | http://127.0.0.1:8000/redoc |
+| Health | http://127.0.0.1:8000/health |
+
+Para grabar un vídeo tuyo: Windows + G (Xbox Game Bar) con `/docs` abierto, o un Loom. No hay MP4 de producto porque no hay UI.
+
+### Swagger UI — catálogo de endpoints
+
+![Swagger UI: health, users, auth, tickets, workflows](docs/screenshots/swagger-ui.png)
+
+### Login (OAuth2 form)
+
+`POST /auth/login` usa **formulario**, no JSON. El campo `username` es el **email**. Respuesta: `access_token` y `refresh_token`.
+
+![POST /auth/login en Swagger](docs/screenshots/swagger-login.png)
+
+1. Ejecuta **login** y copia `access_token`.
+2. **Authorize** (candado) → pega el token (sin la palabra `Bearer`).
+3. `GET /auth/me` no incluye `hashed_password`.
+4. `POST /auth/refresh` con el refresh emite un par nuevo. Un refresh **no** vale como Bearer en `/tickets`.
+
+### Métricas (el “dashboard” actual)
+
+No hay pantalla de gráficos. El resumen es JSON: `GET /tickets/stats` (hace falta JWT).
+
+![GET /tickets/stats schema en Swagger](docs/screenshots/swagger-tickets-stats.png)
+
+Campos: `total`, `by_status`, `by_priority`, `by_category`, `awaiting_first_response`, `sla_breached_unalerted`, `sla_breached_already_alerted`.
+
+### Arquitectura y ciclo del ticket
+
+![Diagrama de componentes](docs/screenshots/architecture-overview.png)
+
+![Ciclo de un ticket](docs/screenshots/ticket-lifecycle.png)
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente HTTP / Swagger
+    participant API as FastAPI
+    participant DB as PostgreSQL
+    participant AI as Ollama (opcional)
+    participant WF as Motor de workflows
+
+    C->>API: POST /auth/login (form email+password)
+    API-->>C: access_token + refresh_token
+    C->>API: POST /tickets (Bearer)
+    API->>AI: clasificar (si está arriba)
+    AI-->>API: SUPPORT / MEDIUM / resumen
+    API->>DB: ticket + sla_due_at + assigned_user_id
+    API->>WF: trigger NEW_TICKET
+    WF-->>API: SEND_EMAIL / TELEGRAM / WHATSAPP (log o stub)
+    API-->>C: TicketResponse
+    Note over API,DB: Bucle SLA o POST /tickets/sla-check
+    API->>WF: trigger SLA_BREACH (una vez por ticket)
 ```
-enterprise-automation-platform/
-├── backend/
-│   ├── app/
-│   │   ├── ai/              # Módulo de IA y automatización inteligente
-│   │   ├── api/             # Endpoints de API
-│   │   ├── auth/            # Autenticación y autorización
-│   │   ├── audit/           # Sistema de auditoría
-│   │   ├── clients/         # Gestión de clientes
-│   │   ├── common/          # Utilidades comunes
-│   │   ├── core/            # Configuración central
-│   │   ├── database/        # Configuración de base de datos
-│   │   ├── notifications/   # Sistema de notificaciones
-│   │   ├── roles/           # Gestión de roles y permisos
-│   │   ├── security/        # Seguridad y encriptación
-│   │   ├── tickets/         # Sistema de tickets
-│   │   ├── users/           # Gestión de usuarios
-│   │   ├── workflow_engine/ # Motor de workflows
-│   │   └── workflows/       # Gestión de workflows
-│   ├── alembic/             # Migraciones de base de datos
-│   ├── tests/               # Tests unitarios
-│   ├── requirements.txt     # Dependencias de Python
-│   └── .env                 # Variables de entorno (no versionado)
-├── docs/                    # Documentación (pendiente)
-├── docker-compose.yml       # Orquestación de contenedores
-└── .gitignore              # Archivos ignorados por git
+
+---
+
+## Flujo real al crear un ticket
+
+1. JWT de un usuario activo.
+2. `client_id` existente.
+3. Defaults `SUPPORT` / `MEDIUM` si Ollama falla; si responde, se **normalizan** alias en español a enums.
+4. SLA en horas según prioridad (`CRITICAL` 1 h, `HIGH` 2 h, `MEDIUM` 8 h, `LOW` 24 h).
+5. Asignación: `BILLING` → rol `Facturación`, `SUPPORT` → `Soporte`, `SALES` → `Ventas` (primer usuario activo con ese nombre de rol).
+6. Workflows `ACTIVE` con `trigger == NEW_TICKET`. `configuration` vacío = siempre; JSON `{"priority":"CRITICAL"}` = solo si coincide.
+7. Acciones: `SEND_EMAIL` (log), `SEND_TELEGRAM` / `SEND_WHATSAPP` (print/stub).
+8. Primer comentario **público** rellena `first_response_at`.
+9. SLA vencido + sin primera respuesta + `sla_alerted_at` vacío → `SLA_BREACH` (POST `/tickets/sla-check` o bucle si `SLA_CHECK_INTERVAL_SECONDS > 0`).
+
+Rol de administración en código: nombre **`Administrador`** (el seed inglés `Administrator` es otro rol).
+
+---
+
+## Arranque
+
+### Docker (API + Postgres)
+
+Desde la **raíz** del repo. Variables de Postgres en `backend/.env` (Compose las inyecta; `POSTGRES_HOST` de la API se fuerza a `postgres`).
+
+```powershell
+docker compose up -d --build
 ```
 
-## Configuración e Instalación
+- API: http://127.0.0.1:8000/docs  
+- No dejes otro uvicorn en el puerto 8000.  
+- Redis se levanta pero **la aplicación no lo usa**.  
+- Ollama en el host no es `localhost` desde el contenedor (`host.docker.internal` si lo necesitas). Los tickets se crean igual sin IA.
 
-### Prerrequisitos
+### Local (venv)
 
-- Docker y Docker Compose
-- Python 3.13+
-- Git
+```powershell
+cd backend
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-### Variables de Entorno
+Postgres tiene que estar en marcha (`docker compose up -d postgres` basta).
 
-Crear un archivo `.env` en el directorio `backend/` con las siguientes variables:
+---
+
+## Variables (`backend/.env`)
+
+No se versiona. Ejemplo de claves que `Settings` espera:
 
 ```env
 APP_NAME=Enterprise Automation Platform
 ENVIRONMENT=development
 
-# PostgreSQL
-POSTGRES_DB
-POSTGRES_USER
-POSTGRES_PASSWORD
-POSTGRES_HOST
-POSTGRES_PORT
+POSTGRES_DB=enterprise_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=tu_password
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
 
-# Redis
 REDIS_HOST=localhost
 REDIS_PORT=6379
 
-# JWT
-JWT_SECRET_KEY
-JWT_ALGORITHM
+JWT_SECRET_KEY=cambia_esto
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
 
-# Tokens
-ACCESS_TOKEN_EXPIRE_MINUTES
-REFRESH_TOKEN_EXPIRE_DAYS
-
-# AI/OLLAMA
-OLLAMA_URL=http://localhost:11434/api/generate
+OLLAMA_URL=http://127.0.0.1:11434/api/generate
 OLLAMA_MODEL=gemma3:4b
+
+CORS_ORIGINS=http://localhost:3000
+SLA_CHECK_INTERVAL_SECONDS=0
 ```
 
-### Iniciar con Docker
+`SLA_CHECK_INTERVAL_SECONDS=0` desactiva el bucle (recomendado en tests). En Docker, `15` o `60` para probar SLA automático.
 
-1. Clonar el repositorio:
-```bash
-git clone <repository-url>
-cd enterprise-automation-platform
+---
+
+## Endpoints (resumen)
+
+| Área | Rutas | Auth |
+|------|--------|------|
+| Sistema | `GET /`, `/health`, `/health/ready` | Público |
+| Auth | `POST /auth/login`, `POST /auth/refresh`, `GET /auth/me` | me/refresh según caso |
+| Users | CRUD `/users` | JWT; altas/bajas admin |
+| Roles | `GET /roles` | JWT |
+| Clients | CRUD `/clients` | listar JWT; mutar admin |
+| Tickets | CRUD, `GET /tickets/stats`, `POST /tickets/sla-check` | JWT; sla-check admin |
+| Comentarios | `/tickets/{id}/comments` | JWT |
+| Workflows | CRUD `/workflows` | Admin |
+| Audit | `GET /audit` | Admin |
+| IA | `POST /ai/analyze` | JWT |
+
+Login: `username` = email, `Content-Type: application/x-www-form-urlencoded`.
+
+---
+
+## Estructura (relevante)
+
+```
+enterprise-automation-platform/
+├── docker-compose.yml          # postgres, api, redis (redis sin uso)
+├── docs/screenshots/           # capturas de esta versión
+└── backend/
+    ├── Dockerfile
+    ├── entrypoint.sh           # alembic upgrade + uvicorn
+    ├── alembic/
+    ├── tests/
+    └── app/
+        ├── auth/               # login, refresh, /me
+        ├── tickets/            # CRUD, stats, SLA, scheduler
+        ├── workflows/          # CRUD + engine
+        ├── assignment/         # asignación por categoría
+        ├── ai/                 # Ollama + normalize
+        ├── notifications/      # email log, telegram/whatsapp stub
+        ├── security/           # JWT, bcrypt, RBAC por nombre
+        └── ...
 ```
 
-2. Iniciar los servicios:
-```bash
-docker-compose up -d
+No existe `app/workflow_engine/`. El motor está en `app/workflows/engine.py`.
+
+---
+
+## Tests
+
+Desde `backend` con el **venv** (no el Python del sistema):
+
+```powershell
+python -m pytest tests/test_security.py tests/test_auth.py -v
 ```
 
-3. Verificar que los servicios estén corriendo:
-```bash
-docker-compose ps
-```
+---
 
-### Instalación Local
+## Pendiente (producto)
 
-1. Crear entorno virtual:
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-```
-
-2. Instalar dependencias:
-```bash
-pip install -r requirements.txt
-```
-
-3. Configurar base de datos:
-```bash
-alembic upgrade head
-```
-
-4. Iniciar el servidor:
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-## API Endpoints
-
-### Authentication
-
-- `POST /auth/login` - Inicio de sesión (OAuth2)
-- `GET /auth/me` - Obtener usuario actual (requiere autenticación)
-
-### Users
-
-- `POST /users/` - Crear usuario (requiere autenticación)
-- `GET /users/` - Listar usuarios (requiere autenticación)
-- `GET /users/{user_id}` - Obtener usuario por ID (requiere autenticación)
-- `PUT /users/{user_id}` - Actualizar usuario (requiere autenticación)
-- `DELETE /users/{user_id}` - Eliminar usuario (requiere autenticación)
-
-### Tickets
-
-- `POST /tickets/` - Crear ticket (requiere autenticación)
-- `GET /tickets/` - Listar tickets (requiere autenticación)
-- `GET /tickets/{ticket_id}` - Obtener ticket por ID (requiere autenticación)
-- `PUT /tickets/{ticket_id}` - Actualizar ticket (requiere autenticación)
-- `DELETE /tickets/{ticket_id}` - Eliminar ticket (requiere autenticación)
-
-### Workflows
-
-- `POST /workflows/` - Crear workflow (requiereRol: Admin)
-- `GET /workflows/` - Listar workflows (requiereRol: Admin)
-- `GET /workflows/{workflow_id}` - Obtener workflow por ID (requiereRol: Admin)
-- `PUT /workflows/{workflow_id}` - Actualizar workflow (requiereRol: Admin)
-- `DELETE /workflows/{workflow_id}` - Eliminar workflow (requiereRol: Admin)
-
-### System
-
-- `GET /` - Root endpoint
-- `GET /health` - Health check
-
-### Documentación Interactiva
-
-Una vez iniciado el servidor, accede a:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-## 🗄️ Base de Datos
-
-### Migraciones
-
-Crear nueva migración:
-```bash
-alembic revision --autogenerate -m "description"
-```
-
-Aplicar migraciones:
-```bash
-alembic upgrade head
-```
-
-Revertir migración:
-```bash
-alembic downgrade -1
-```
-
-## Seguridad
-
-- Autenticación basada en JWT con tokens de acceso y refresh
-- Encriptación de contraseñas con bcrypt
-- Sistema de roles y permisos (RBAC)
-- Auditoría completa de acciones del sistema
-- Variables de entorno para datos sensibles
-- Dependencias de autenticación en endpoints protegidos
-- Control de acceso basado en roles para operaciones críticas
-
-
-
-## Módulos Principales
-
-### Auth
-- Registro y autenticación de usuarios
-- Gestión de tokens JWT (access y refresh)
-- Validación de credenciales
-
-### Users
-- CRUD de usuarios
-- Gestión de perfiles
-- Asignación de roles
-
-### Roles
-- Definición de roles y permisos
-- Asignación de roles a usuarios
-- Control de acceso basado en roles (RBAC)
-
-### Tickets
-- Sistema de tickets de soporte
-- Gestión de estados y prioridades
-- Comentarios en tickets
-
-### Workflows
-- Definición de workflows
-- Ejecución de procesos automatizados
-- Motor de workflow engine
-
-### Audit
-- Registro de acciones del sistema
-- Trazabilidad de cambios
-- Logs de seguridad
-
-### Clients
-- Gestión de clientes empresariales
-- Información de contacto
-- Historial de interacciones
-
-### AI
-- Integración con servicios de IA
-- Automatización inteligente
-- Análisis y clasificación inteligente de tickets
-
-## Desarrollo
-
-### Código de Estilo
-
-El proyecto sigue las convenciones de PEP 8 y utiliza:
-- Type hints para mejor documentación del código
-- Pydantic para validación de datos
-- SQLAlchemy ORM para acceso a base de datos
-- FastAPI para la API REST
-
-### Testing
-
-Ejecutar tests:
-```bash
-cd backend
-pytest
-```
-
-Ejecutar tests con cobertura:
-```bash
-pytest --cov=app --cov-report=html
-```
-
-### Branching Strategy
-
-- `master` - Rama principal de producción
-- `develop` - Rama de desarrollo
-- `feature/*` - Nuevas funcionalidades
-- `bugfix/*` - Correcciones de bugs
-
-## Screenshots
-
-### Swagger UI
-
-![Swagger UI](docs/screenshots/swagger-ui.png)
-
-### Dashboard
-
-![Dashboard](docs/screenshots/dashboard.png)
-
-*Nota: Los screenshots se agregarán en futuras versiones.*
-
-
+WhatsApp Cloud API (Meta, de pago en producción), n8n, agente con herramientas, frontend/dashboard, SMTP real, cola Redis.
